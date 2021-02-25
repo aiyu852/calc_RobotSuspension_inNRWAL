@@ -2,7 +2,7 @@ import numpy as np
 # import matplotlib.pyplot as plt
 
 # 计算的坐标遍历细分值
-sub_num = 4
+sub_num = .1
 
 # 遍历的坐标空间
 Lowlim_x = -40.7
@@ -108,9 +108,9 @@ def find_spring(xy0, xy1, xy2, L0_spring):
 
 num_points = 0
 num_springs = 0
-for n in np.arange(30, 51, 2):
-    for D in range(4, 7):
-        for d in [0.3, 0.5, 0.6, 0.8, 1]:
+for n in np.arange(30, 55, 1):
+    for D in range(3, 7):
+        for d in [0.3, 0.5, 0.6, 0.8, 1, 1.2]:
 
             num_springs += 1
             C = D/d
