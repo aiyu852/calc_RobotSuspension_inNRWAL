@@ -145,7 +145,7 @@ for n in np.arange(30, 51, 2):
                                     continue
                                 if np.max(F_N) > 15:
                                     continue
-                                elif np.max(F_N) > find_F_N_max or find_F_N_var > np.var(F_N):
+                                elif (np.max(F_N) > find_F_N_max and find_F_N_max < 12) or (np.var(F_N) < find_F_N_var and find_F_N_max > 12):
                                     find_F_N = F_N
                                     find_F_N_max = np.max(F_N)
                                     find_F_N_var = np.var(F_N)
