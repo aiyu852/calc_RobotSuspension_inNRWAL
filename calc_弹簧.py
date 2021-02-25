@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # 计算的坐标遍历细分值
-sub_num = 1
+sub_num = 10
 
 
 # 遍历的坐标空间
@@ -207,36 +207,34 @@ if D > 0:
 
     if find_d == 0:
         print('未找到')
+    else:
+        find_C = find_D/find_d
+        k = G*find_d/(8*(find_C**3)*find_n)
 
-    find_C = find_D/find_d
-    k = G*find_d/(8*(find_C**3)*find_n)
+        # 计算当前状态下的弹簧长度和弹簧初始长度
+        L_spring = np.sqrt((find_x1-find_x2)**2+(find_y1-find_y2)**2)
+        L0_spring = (find_n+1)*find_d
+        plt.figure()
+        for height_wheeltochassis in np.arange(10, 36):
+            # 计算r和H的初始角度值
+            alpha = np.arccos((r**2+H**2-L_spring**2)/(2*r*H))
+            print("alpha={},{}".format(alpha, alpha/np.pi*180))
+            alpha_delta = np.arcsin(
+                (height_wheeltochassis-10+11.4)/s)-np.arcsin(11.4/s)
+            alpha -= alpha_delta
+            # 计算弹簧弹力
+            L_spring_now = np.sqrt(r**2+H**2-2*r*H*np.cos(alpha))
+            F_spring = k*(L_spring_now-L0_spring)
 
-    # 计算当前状态下的弹簧长度和弹簧初始长度
-    L_spring = np.sqrt((find_x1-find_x2)**2+(find_y1-find_y2)**2)
-    L0_spring = (find_n+1)*find_d
-    plt.figure()
-    for height_wheeltochassis in np.arange(10, 36):
-        # 计算r和H的初始角度值
-        alpha = np.arccos((r**2+H**2-L_spring**2)/(2*r*H))
-        print("alpha={},{}".format(alpha, alpha/np.pi*180))
-        alpha_delta = np.arcsin(
-            (height_wheeltochassis-10+11.4)/s)-np.arcsin(11.4/s)
-        alpha -= alpha_delta
-        # 计算弹簧弹力
-        L_spring_now = np.sqrt(r**2+H**2-2*r*H*np.cos(alpha))
-        F_spring = k*(L_spring_now-L0_spring)
-
-        # 计算弹力力臂
-        beta = np.arccos((L_spring_now**2+H**2-r**2)/(2*L_spring_now*H))
-        arm_F_spring = H*np.sin(beta)
-        # 弹簧对转轴施加的扭矩
-        T = arm_F_spring * F_spring
-        # 对地压力反力力臂
-        arm_F_N = s * np.cos(theta)
-        # 对地压力
-        print("弹簧长度:{}，对地压力为:{}".format(L_spring_now, T/arm_F_N))
-        plt.scatter(height_wheeltochassis, T/arm_F_N)
-else:
-    print("未找到！")
+            # 计算弹力力臂
+            beta = np.arccos((L_spring_now**2+H**2-r**2)/(2*L_spring_now*H))
+            arm_F_spring = H*np.sin(beta)
+            # 弹簧对转轴施加的扭矩
+            T = arm_F_spring * F_spring
+            # 对地压力反力力臂
+            arm_F_N = s * np.cos(theta)
+            # 对地压力
+            print("弹簧长度:{}，对地压力为:{}".format(L_spring_now, T/arm_F_N))
+            plt.scatter(height_wheeltochassis, T/arm_F_N)
 
 # plt.show()

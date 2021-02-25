@@ -2,7 +2,7 @@ import numpy as np
 # import matplotlib.pyplot as plt
 
 # 计算的坐标遍历细分值
-sub_num = 10
+sub_num = 4
 
 # 遍历的坐标空间
 Lowlim_x = -40.7
@@ -22,6 +22,7 @@ theta = np.arctan(xy0[1]/xy0[0])
 G = 70000
 
 # 最终数值
+find_F_N = []
 find_F_N_max = 0
 find_F_N_var = 0
 find_n = 0
@@ -42,7 +43,7 @@ calc_counterforce
 '''
 
 
-def find_avaliable_point(Lx, Ux, Ly, Uy, sn):
+def find_avaliable_point(Lx, Ux, Ly, Uy, sn, D, d):
     for x in np.arange(Lx, Ux, sn):
         for y in np.arange(Ly, Uy, sn):
             # 坐标点不在车轮圆内，不在电机所在的圆内，不在两个圆切线下
@@ -61,39 +62,34 @@ def Interfere_WheelandSpring(xy1, xy2, length_spring):
         return 0
 
 
-def calc_counterforce(xy0, r, H, alpha, theta):
+def calc_counterforce(xy0, r, H, alpha, theta, L0_spring):
     F_N = []
     F_spring = []
-    for i, height_WheeltoChassis in enumerate(np.arange(10, 36)):
+    for index, height_WheeltoChassis in enumerate(range(10, 36)):
         alpha_delta = np.arcsin(
             (height_WheeltoChassis-10+xy0[1])/s)-np.arcsin(xy0[1]/s)
-        xy2_now = (xy2[0]*np.cos(alpha_delta)-xy2[1]*np.sin(alpha_delta),
-                   xy2[0]*np.sin(alpha_delta)+xy2[1]*np.cos(alpha_delta))
         alpha_now = alpha - alpha_delta
         L_spring_now = np.sqrt(r**2+H**2-2*r*H*np.cos(alpha_now))
+        # 判断弹簧是否失去弹力
         if L_spring_now < L0_spring:
-            print("弹簧失去弹力")
-            break
-        elif Interfere_WheelandSpring(xy1, xy2_now, L_spring_now):
-            print("弹簧和轮胎干涉")
-            break
+            return None
         else:
             # 计算弹簧力F_spring，弹簧力臂arm_F_spring,判断弹簧力是否单调
             F_spring.append(k*(L_spring_now-L0_spring))
-            if i > 0 and F_spring[i-1] < F_spring[i]:
-                print("弹簧力不单调")
-                break
+            if index > 0 and F_spring[index-1] < F_spring[index]:
+                return None
             beta = np.arccos(
                 (L_spring_now**2+H**2-r**2)/(2*L_spring_now*H))
             arm_F_spring = H*np.sin(beta)
 
             # 得到平衡扭矩T
-            T = arm_F_spring * F_spring
+            T = arm_F_spring * F_spring[index]
 
             # 计算地面支反力力臂arm_F_N， 地面支反力F_N
             arm_F_N = s * np.cos(theta)
             F_N.append(T/arm_F_N)
-            return F_N
+            # print(index, F_spring[index], F_N[index])
+    return F_N
 
 
 def find_spring(xy0, xy1, xy2, L0_spring):
@@ -107,59 +103,66 @@ def find_spring(xy0, xy1, xy2, L0_spring):
     H = np.sqrt((xy0[0]-xy1[0])**2+(xy0[1]-xy1[1])**2)
     alpha = np.arccos((r**2+H**2-L_spring**2)/(2*r*H))
     # 计算变化的地面反力
-    return calc_counterforce(xy0, r, H, alpha, theta)
-
-
-def fanded_evaluation(n, D, d, xy1, xy2, F_N, find_xy1, find_xy2,
-                      find_F_N_max, find_F_N_var, find_n, find_D, find_d):
-    find_F_N_max = np.nax(F_N)
-    find_F_N_var = np.var(F_N)
-    find_xy1 = xy1
-    find_xy2 = xy2
-    find_n = n
-    find_D = D
-    find_d = d
+    return calc_counterforce(xy0, r, H, alpha, theta, L0_spring)
 
 
 num_points = 0
 num_springs = 0
-while 1:
-    try:
-        # xy1 是弹簧的固定点
-        xy1 = next(find_avaliable_point(
-            Lowlim_x, Upplim_x, Lowlim_y, Upplim_y, sub_num))
-        while 1:
-            try:
-                # xy2 是弹簧的铰接点
-                xy2 = next(find_avaliable_point(
-                    Lowlim_x, Upplim_x, Lowlim_y, Upplim_y, sub_num))
-                num_points += 1
-                num_springs = 0
-                for n in np.arange(40, 51, 2):
-                    for D in range(4, 7):
-                        for d in [0.3, 0.5, 0.6, 0.8, 1]:
-                            num_springs += 1
-                            C = D/d
-                            k = G*d/(8*(C**3)*n)
-                            # 弹簧原长
-                            L0_spring = (n+1)*d
+for n in np.arange(30, 51, 2):
+    for D in range(4, 7):
+        for d in [0.3, 0.5, 0.6, 0.8, 1]:
 
-                            print("在计算{}个点,第{}种弹簧".format(
-                                num_points, num_springs))
+            num_springs += 1
+            C = D/d
+            k = G*d/(8*(C**3)*n)
+            # 弹簧原长
+            L0_spring = (n+1)*d
+            xy1_source = find_avaliable_point(
+                Lowlim_x, Upplim_x, Lowlim_y, Upplim_y, sub_num, D, d)
+            while 1:
+                try:
+                    # xy1 是弹簧的固定点
+                    xy1 = next(xy1_source)
+                    xy2_source = find_avaliable_point(
+                        Lowlim_x, Upplim_x, Lowlim_y, Upplim_y, sub_num, D, d)
+                    while 1:
+                        try:
+                            # xy2 是弹簧的铰接点
+                            xy2 = next(xy2_source)
+                            num_points += 1
+
+                            print("计算第{}种弹簧,第{}个点".format(
+                                num_springs, num_points))
 
                             if find_spring(xy0, xy1, xy2, L0_spring) is None:
                                 continue
+                            F_N = np.array(find_spring(
+                                xy0, xy1, xy2, L0_spring))
+                            if F_N.size < 26:
+                                continue
                             else:
-                                F_N = np.array(find_spring(
-                                    xy0, xy1, xy2, L0_spring))
                                 if np.min(F_N) == 0:
                                     continue
-                                elif np.max(F_N) > 15:
+                                if np.max(F_N) > 15:
                                     continue
                                 elif np.max(F_N) > find_F_N_max or find_F_N_var > np.var(F_N):
-                                    fanded_evaluation(n, D, d, xy1, xy2, F_N, find_xy1, find_xy2,
-                                                      find_F_N_max, find_F_N_var, find_n, find_D, find_d)
-            except:
-                break
-    except:
-        break
+                                    find_F_N = F_N
+                                    find_F_N_max = np.max(F_N)
+                                    find_F_N_var = np.var(F_N)
+                                    find_xy1 = xy1
+                                    find_xy2 = xy2
+                                    find_n = n
+                                    find_D = D
+                                    find_d = d
+                        except:
+                            break
+                except:
+                    break
+
+print("#############################")
+print("#############################")
+print("#############################")
+
+print("D,d,n={},{},{},xy1={},xy2={}, F_max={},F_var={}".format(
+    find_D, find_d, find_n, find_xy1, find_xy2, find_F_N_max, find_F_N_var))
+print(find_F_N)
