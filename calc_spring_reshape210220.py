@@ -5,44 +5,6 @@ import itertools
 from functools import partial
 
 
-# import matplotlib.pyplot as plt
-num_points = 0
-num_springs = 0
-
-
-# 计算的坐标遍历细分值
-sub_num = 10
-
-# 遍历的坐标空间
-Lowlim_x = -40.7
-Upplim_x = 52
-Lowlim_y = 0
-Upplim_y = 45.8
-
-# 转轴中心的坐标值
-xy0 = (94.104, 11.439)
-
-# 轮子中心与转轴的距离s
-s = np.sqrt(xy0[0]**2+xy0[1]**2)
-# 轮中心与转轴连线和水平线的夹角θ
-theta = np.arctan(xy0[1]/xy0[0])
-
-# 弹簧刚度
-G = 70000
-
-# 最终数值
-find_F_N = []
-find_F_N_max = 0
-find_F_N_var = 0
-find_n = 0
-find_D = 0
-find_d = 0
-find_xy1 = (0, 0)
-find_xy2 = (0, 0)
-
-find_values = [find_F_N, find_F_N_max, find_F_N_var,
-               find_n, find_D, find_d, find_xy1, find_xy2]
-
 '''
 find_avaliable_point
 设置遍历的空间
@@ -118,19 +80,19 @@ def find_spring(k, xy0, xy1, xy2, L0_spring):
     return calc_counterforce(xy0, k, r, H, alpha, theta, L0_spring)
 
 
-def process(items):
+def process(para, find_values, items):
     C = items[1]/items[2]
-    k = G*items[2]/(8*(C**3)*items[0])
+    k = para[8]*items[2]/(8*(C**3)*items[0])
     # 弹簧原长
     L0_spring = (items[0]+1)*items[2]
     xy1_source = find_avaliable_point(
-        Lowlim_x, Upplim_x, Lowlim_y, Upplim_y, sub_num, items[1], items[2])
+        para[1], para[2], para[3], para[4], para[4], items[1], items[2])
     while 1:
         try:
             # xy1 是弹簧的固定点
             xy1 = next(xy1_source)
             xy2_source = find_avaliable_point(
-                Lowlim_x, Upplim_x, Lowlim_y, Upplim_y, sub_num, items[1], items[2])
+                para[1], para[2], para[3], para[4], para[4],  items[1], items[2])
             while 1:
                 try:
                     # xy2 是弹簧的铰接点
@@ -139,9 +101,10 @@ def process(items):
                     # print("计算第{}种弹簧,第{}个点".format(
                     #     num_springs, num_points))
 
-                    if find_spring(k, xy0, xy1, xy2, L0_spring) is None:
+                    if find_spring(k, para[5], xy1, xy2, L0_spring) is None:
                         continue
-                    F_N = np.array(find_spring(k, xy0, xy1, xy2, L0_spring))
+                    F_N = np.array(find_spring(
+                        k, para[5], xy1, xy2, L0_spring))
                     if F_N.size < 26:
                         continue
                     else:
@@ -149,94 +112,73 @@ def process(items):
                             continue
                         if np.max(F_N) > 15:
                             continue
-                        elif (np.max(F_N) > find_values[1] and find_values[1] < 12) or (np.var(F_N) < find_values[2] and find_values[1] > 12):
-                            find_values[0] = F_N
-                            find_values[1] = np.max(F_N)
-                            find_values[2] = np.var(F_N)
-                            find_values[3] = items[0]
-                            find_values[4] = items[1]
-                            find_values[5] = items[2]
-                            find_values[6] = xy1
-                            find_values[7] = xy2
-
+                        elif (np.max(F_N) > find_values[0] and find_values[0] < 12) or (np.var(F_N) < find_values[1] and find_values[0] > 12):
+                            # find_F_N = F_N
+                            find_values[0] = np.max(F_N)
+                            find_values[1] = np.var(F_N)
+                            # find_n = items[0]
+                            # find_D = items[1]
+                            # find_d = items[2]
+                            # find_xy1 = xy1
+                            # find_xy2 = xy2
+                            print("ok")
                 except:
                     break
         except:
             break
-    return find_values
 
 
 if __name__ == '__main__':
+    # 计算的坐标遍历细分值
+    sub_num = 1
+    # 遍历的坐标空间
+    Lowlim_x = -40.7
+    Upplim_x = 52
+    Lowlim_y = 0
+    Upplim_y = 45.8
+    # 转轴中心的坐标值
+    xy0 = (94.104, 11.439)
+    # 轮子中心与转轴的距离s
+    s = np.sqrt(xy0[0]**2+xy0[1]**2)
+    # 轮中心与转轴连线和水平线的夹角θ
+    theta = np.arctan(xy0[1]/xy0[0])
+    # 弹簧刚度
+    G = 70000
 
-    start = time.time()
-    # func = partial(process, num_springs, num_points)
+    parameters = [sub_num, Lowlim_x, Upplim_x,
+                  Lowlim_y, Upplim_y, xy0, s, theta, G]
+    #
+    #
+    # 最终数值
 
-    pool = multiprocessing.Pool()
+    findFNvalues = multiprocessing.Manager().list()
+    # find_F_N_max = 0
+    # find_F_N_var = 0
+    # find_n = 0
+    # find_D = 0
+    # find_d = 0
+    # find_xy1 = (0, 0)
+    # find_xy2 = (0, 0)
 
-    item = list(itertools.product(range(30, 55),
-                                  range(3, 7), [0.3, 0.5, 0.6, 0.8, 1, 1.2]))
+    items = list(itertools.product(range(30, 55),
+                                   range(3, 7), [0.3, 0.5, 0.6, 0.8, 1, 1.2]))
 
-    # for n in np.arange(30, 55, 1):
-    #     for D in range(3, 7):
-    #         for d in [0.3, 0.5, 0.6, 0.8, 1, 1.2]:
+    process_list = []
+    for item in items:
+        for process_ in range(2):
+            process_ = multiprocessing.Process(
+                target=process, args=(parameters, findFNvalues, item))
+            process_.start()
+            process_list.append(process_)
+    for p in process_list:
+        p.join
 
-    res = pool.map(process, item)
-    end = time.time()
-
-    print(end-start)
     # print("#############################")
     # print("#############################")
     # print("#############################")
 
-    print("D,d,n={},{},{},xy1={},xy2={}, F_max={},F_var={}".format(
-        find_values[3], find_values[4], find_values[5], find_values[6], find_values[7], find_values[1], find_values[2]))
-    print(find_F_N)
+    # print("D,d,n={},{},{},xy1={},xy2={}, F_max={},F_var={}".format(
+    #     find_D, find_d, find_n, find_xy1, find_xy1, find_F_N_max, find_F_N_var))
+    # print(find_F_N)
 
-'''
-                num_springs += 1
-                C = D/d
-                k = G*d/(8*(C**3)*n)
-                # 弹簧原长
-                L0_spring = (n+1)*d
-                xy1_source = find_avaliable_point(
-                    Lowlim_x, Upplim_x, Lowlim_y, Upplim_y, sub_num, D, d)
-                while 1:
-                    try:
-                        # xy1 是弹簧的固定点
-                        xy1 = next(xy1_source)
-                        xy2_source = find_avaliable_point(
-                            Lowlim_x, Upplim_x, Lowlim_y, Upplim_y, sub_num, D, d)
-                        while 1:
-                            try:
-                                # xy2 是弹簧的铰接点
-                                xy2 = next(xy2_source)
-                                num_points += 1
-
-                                print("计算第{}种弹簧,第{}个点".format(
-                                    num_springs, num_points))
-
-                                if find_spring(xy0, xy1, xy2, L0_spring) is None:
-                                    continue
-                                F_N = np.array(find_spring(
-                                    xy0, xy1, xy2, L0_spring))
-                                if F_N.size < 26:
-                                    continue
-                                else:
-                                    if np.min(F_N) == 0:
-                                        continue
-                                    if np.max(F_N) > 15:
-                                        continue
-                                    elif (np.max(F_N) > find_F_N_max and find_F_N_max < 12) or (np.var(F_N) < find_F_N_var and find_F_N_max > 12):
-                                        find_F_N = F_N
-                                        find_F_N_max = np.max(F_N)
-                                        find_F_N_var = np.var(F_N)
-                                        find_xy1 = xy1
-                                        find_xy2 = xy2
-                                        find_n = n
-                                        find_D = D
-                                        find_d = d
-                            except:
-                                break
-                    except:
-                        break
-'''
+    print(findFNvalues)
