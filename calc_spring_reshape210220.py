@@ -1,5 +1,5 @@
 import numpy as np
-from multiprocessing import Process, Value, Lock
+from multiprocessing import Process, Manager
 import time
 import itertools
 from functools import partial
@@ -94,7 +94,15 @@ def find_spring(k, xy0, xy1, xy2, L0_spring):
     return calc_counterforce(xy0, k, r, H, alpha, L0_spring)
 
 
-def process(find_F_N_max, find_F_N_var, items, lock):
+def process(items, find_values):
+    find_F_N = []
+    find_F_N_max = 0
+    find_F_N_var = 0
+    find_n = 0
+    find_D = 0
+    find_d = 0
+    find_xy1 = (0, 0)
+    find_xy2 = (0, 0)
     for item in items:
         C = item[1]/item[2]
         k = G*item[2]/(8*(C**3)*item[0])
@@ -119,7 +127,6 @@ def process(find_F_N_max, find_F_N_var, items, lock):
                             continue
                         F_N = np.array(find_spring(
                             k, xy0, xy1, xy2, L0_spring))
-                        lock.acquire()
                         if F_N.size < 26:
                             continue
                         else:
@@ -127,27 +134,28 @@ def process(find_F_N_max, find_F_N_var, items, lock):
                                 continue
                             if np.max(F_N) > 15:
                                 continue
-                            with lock:
-                                if (np.max(F_N) > find_F_N_max.value and find_F_N_max.value < 12) or (np.var(F_N) < find_F_N_var.value and find_F_N_max.value > 12):
-                                    # find_F_N = F_N
-                                    find_F_N_max.value = np.max(F_N)
-                                    find_F_N_var.value = np.var(F_N)
-                                    # find_n = item[0]
-                                    # find_D = item[1]
-                                    # find_d = item[2]
-                                    # find_xy1 = xy1
-                                    # find_xy2 = xy2
+                            if (np.max(F_N) > find_F_N_max and find_F_N_max < 12) or (np.var(F_N) < find_F_N_var and find_F_N_max > 12):
+                                find_F_N = F_N
+                                find_F_N_max = np.max(F_N)
+                                find_F_N_var = np.var(F_N)
+                                find_n = item[0]
+                                find_D = item[1]
+                                find_d = item[2]
+                                find_xy1 = xy1
+                                find_xy2 = xy2
                     except:
                         break
             except:
                 break
+    f = [find_F_N, find_F_N_max, find_F_N_var,
+         find_n, find_D, find_d, find_xy1, find_xy2]
+    find_values.append(f)
 
 
 if __name__ == '__main__':
     # 最终数值
 
-    find_F_N_max = Value('d', 0)
-    find_F_N_var = Value('d', 0)
+    find_values = Manager().list()
     # find_F_N_max = 0
     # find_F_N_var = 0
     # find_n = 0
@@ -155,7 +163,6 @@ if __name__ == '__main__':
     # find_d = 0
     # find_xy1 = (0, 0)
     # find_xy2 = (0, 0)
-    lock = Lock()
 
     items = list(itertools.product(range(30, 55),
                                    range(3, 7), [0.3, 0.5, 0.6, 0.8, 1, 1.2]))
@@ -163,7 +170,7 @@ if __name__ == '__main__':
     num_cpus = 20
 
     start = time.time()
-    processes = [Process(target=process, args=(find_F_N_max, find_F_N_var, items[i*len(items)//num_cpus:(i+1)*len(items)//num_cpus+1], lock))
+    processes = [Process(target=process, args=(items[i*len(items)//num_cpus:(i+1)*len(items)//num_cpus+1], find_values))
                  for i in range(num_cpus)]
     for p in processes:
         p.start()
@@ -175,5 +182,23 @@ if __name__ == '__main__':
     # print(find_F_N)
 
     print(end-start)
+    N = []
+    N_max = 0
+    N_var = 0
+    N_n = 0
+    N_D = 0
+    N_d = 0
+    N_xy1 = 0
+    N_xy2 = 0
+    for F_N, F_N_max, F_N_var, n, D, d, xy1, xy2 in find_values:
+        if (F_N_max > N_max and N_max < 12) or (F_N_max < N_var and N_max > 12):
+            N = F_N
+            N_max = F_N_max
+            N_var = F_N_var
+            N_n = n
+            N_D = D
+            N_d = d
+            N_N_x1 = xy1
+            N_N_x2 = xy2
 
-    print(find_F_N_max.value, find_F_N_var.value)
+    print(N_max)
