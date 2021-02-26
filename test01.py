@@ -1,26 +1,26 @@
-import os
-from multiprocessing import Process, Manager
-import multiprocessing
+from multiprocessing import Process, Value, Lock
+from time import sleep
 
 
-def f(d, l):
-    d[os.getpid()] = os.getpid()
-    l.append(os.getpid())
-    print(d)
-    print(l)
+def count(x, lock):
+    for i in range(20):
+        sleep(0.01)
+        with lock:
+            x.value += 1
+
+
+def main():
+    counter = Value('i', 0)
+    lock = Lock()
+    processes = [Process(target=count, args=(counter, lock))
+                 for i in range(10)]
+    for p in processes:
+        p.start()
+    for p in processes:
+        p.join()
+    print(counter.value)
 
 
 if __name__ == '__main__':
-    with Manager() as manager:
-        d = manager.dict()
-        l = manager.list(range(5))
-
-        # pool = multiprocessing.Pool()
-        # pool.map(f, d, l)
-        process_list=[]
-        for process_ in range(3):
-            process_ = Process(target=f, args=(d, l))
-            process_.start()
-            process_list.append(process_)
-        for p in process_list:
-            p.join()
+    for i in range(10):
+        main()

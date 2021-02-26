@@ -1,21 +1,24 @@
-import multiprocessing
-import time
+from multiprocessing import Process, Value, Lock
 
 
-def f(x):
-    return x**12
+def f(s, x, lock):
+    for x_ in x:
+        with lock:
+            if x_ > s.value:
+                s.value = x_
 
 
 if __name__ == '__main__':
-
-    start = time.time()
-    cores = multiprocessing.cpu_count()
-    pool = multiprocessing.Pool(processes=cores)
     xs = range(200)
 
-    # method 2: imap
-    for y in pool.imap(f, xs):
-        print(y)            # 0, 1, 4, 9, 16, respectively
+    sum = Value('d', 0)
+    lock = Lock()
 
-    end = time.time()
-    print(end-start)
+    num = 2
+    processes = [Process(target=f, args=(sum, xs[i*len(xs)//num:(i+1)*len(xs)//num+1],  lock))
+                 for i in range(num)]
+    for p in processes:
+        p.start()
+    for p in processes:
+        p.join()
+    print(sum.value)
