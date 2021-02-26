@@ -6,6 +6,9 @@ from functools import partial
 
 
 # import matplotlib.pyplot as plt
+num_points = 0
+num_springs = 0
+
 
 # 计算的坐标遍历细分值
 sub_num = 4
@@ -166,8 +169,7 @@ def process(items):
 
 
 if __name__ == '__main__':
-    num_points = 0
-    num_springs = 0
+
     start = time.time()
     # func = partial(process, num_springs, num_points)
 
