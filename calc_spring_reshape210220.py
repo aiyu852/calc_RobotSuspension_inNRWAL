@@ -11,7 +11,7 @@ num_springs = 0
 
 
 # 计算的坐标遍历细分值
-sub_num = 4
+sub_num = 10
 
 # 遍历的坐标空间
 Lowlim_x = -40.7
@@ -119,7 +119,6 @@ def find_spring(k, xy0, xy1, xy2, L0_spring):
 
 
 def process(items):
-    num_springs += 1
     C = items[1]/items[2]
     k = G*items[2]/(8*(C**3)*items[0])
     # 弹簧原长
@@ -136,10 +135,9 @@ def process(items):
                 try:
                     # xy2 是弹簧的铰接点
                     xy2 = next(xy2_source)
-                    num_points += 1
 
-                    print("计算第{}种弹簧,第{}个点".format(
-                        num_springs, num_points))
+                    # print("计算第{}种弹簧,第{}个点".format(
+                    #     num_springs, num_points))
 
                     if find_spring(k, xy0, xy1, xy2, L0_spring) is None:
                         continue
@@ -184,9 +182,11 @@ if __name__ == '__main__':
 
     res = pool.map(process, item)
     end = time.time()
-    print("#############################")
-    print("#############################")
-    print("#############################")
+
+    print(end-start)
+    # print("#############################")
+    # print("#############################")
+    # print("#############################")
 
     print("D,d,n={},{},{},xy1={},xy2={}, F_max={},F_var={}".format(
         find_values[3], find_values[4], find_values[5], find_values[6], find_values[7], find_values[1], find_values[2]))
