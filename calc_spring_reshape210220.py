@@ -50,7 +50,7 @@ def Interfere_WheelandSpring(xy1, xy2, length_spring):
         return 0
 
 
-def calc_counterforce(xy0, k, r, H, alpha, theta, L0_spring):
+def calc_counterforce(xy0, k, r, H, alpha, L0_spring):
     F_N = []
     F_spring = []
     for index, height_WheeltoChassis in enumerate(range(10, 36)):
@@ -91,7 +91,7 @@ def find_spring(k, xy0, xy1, xy2, L0_spring):
     H = np.sqrt((xy0[0]-xy1[0])**2+(xy0[1]-xy1[1])**2)
     alpha = np.arccos((r**2+H**2-L_spring**2)/(2*r*H))
     # 计算变化的地面反力
-    return calc_counterforce(xy0, k, r, H, alpha, theta, L0_spring)
+    return calc_counterforce(xy0, k, r, H, alpha, L0_spring)
 
 
 def process(find_F_N_max, find_F_N_var, items, lock):
@@ -119,15 +119,16 @@ def process(find_F_N_max, find_F_N_var, items, lock):
                             continue
                         F_N = np.array(find_spring(
                             k, xy0, xy1, xy2, L0_spring))
+                        lock.acquire()
                         if F_N.size < 26:
                             continue
                         else:
+                            if np.min(F_N) == 0:
+                                continue
+                            if np.max(F_N) > 15:
+                                continue
                             with lock:
-                                if np.min(F_N) == 0:
-                                    continue
-                                if np.max(F_N) > 15:
-                                    continue
-                                elif (np.max(F_N) > find_F_N_max.value and find_F_N_max.value < 12) or (np.var(F_N) < find_F_N_var.value and find_F_N_max.value > 12):
+                                if (np.max(F_N) > find_F_N_max.value and find_F_N_max.value < 12) or (np.var(F_N) < find_F_N_var.value and find_F_N_max.value > 12):
                                     # find_F_N = F_N
                                     find_F_N_max.value = np.max(F_N)
                                     find_F_N_var.value = np.var(F_N)
