@@ -5,7 +5,7 @@ import itertools
 from functools import partial
 
 # 计算的坐标遍历细分值
-sub_num = 2
+sub_num = 1
 # 遍历的坐标空间
 Lowlim_x = -40.7
 Upplim_x = 52
@@ -177,9 +177,6 @@ if __name__ == '__main__':
     for p in processes:
         p.join()
     end = time.time()
-    # print("D,d,n={},{},{},xy1={},xy2={}, F_max={},F_var={}".format(
-    #     find_D, find_d, find_n, find_xy1, find_xy1, find_F_N_max, find_F_N_var))
-    # print(find_F_N)
 
     print(end-start)
     N = []
@@ -201,4 +198,6 @@ if __name__ == '__main__':
             N_N_x1 = xy1
             N_N_x2 = xy2
 
-    print(N_max)
+    print("D,d,n={},{},{},xy1={},xy2={}, F_max={},F_var={}".format(
+        N_D, N_d, N_n, N_xy1, N_xy1, N_max, N_var))
+    print(N)
