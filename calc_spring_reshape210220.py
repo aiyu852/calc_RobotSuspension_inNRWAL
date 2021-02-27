@@ -141,7 +141,7 @@ def process(items, find_values):
                                 continue
                             if np.max(F_N) > 15:
                                 continue
-                            if (np.max(F_N) > find_F_N_max and find_F_N_max < 12) or (((np.max(F_N)-np.min(F_N))/np.max(F_N) < (find_F_N_max-find_F_N_min)/find_F_N_max) and np.max(F_N) > 12):
+                            if (((np.max(F_N)-np.min(F_N))/np.max(F_N) < (find_F_N_max-find_F_N_min)/find_F_N_max) and np.max(F_N) > 12 and np.max(F_N) < 12.5):
                                 find_F_N = F_N
                                 find_F_N_max = np.max(F_N)
                                 find_F_N_min = np.min(F_N)
@@ -189,7 +189,7 @@ if __name__ == '__main__':
     N_xy1 = 0
     N_xy2 = 0
     for F_N, F_N_max, F_N_min, n, D, d, xy1, xy2 in find_values:
-        if (F_N_max > N_max and N_max < 12) or ((F_N_max-F_N_min)/F_N_max < (N_max-N_min)/N_max and F_N_max > 12):
+        if ((F_N_max-F_N_min)/F_N_max < (N_max-N_min)/N_max and F_N_max > 10 and F_N_max < 12.5):
             N = F_N
             N_max = F_N_max
             N_min = F_N_min
