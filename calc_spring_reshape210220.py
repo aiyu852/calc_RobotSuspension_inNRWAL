@@ -1,11 +1,12 @@
 import numpy as np
 from multiprocessing import Process, Manager
+import multiprocessing
 import time
 import itertools
 from functools import partial
 
 # 计算的坐标遍历细分值
-sub_num = 1
+sub_num = 3
 # 遍历的坐标空间
 Lowlim_x = -40.7
 Upplim_x = 52
@@ -167,7 +168,8 @@ if __name__ == '__main__':
     items = list(itertools.product(range(30, 55),
                                    range(3, 7), [0.3, 0.5, 0.6, 0.8, 1, 1.2]))
 
-    num_cpus = 8
+    num_cpus = multiprocessing.cpu_count()
+    print(num_cpus)
 
     start = time.time()
     processes = [Process(target=process, args=(items[i*len(items)//num_cpus:(i+1)*len(items)//num_cpus+1], find_values))
@@ -195,8 +197,8 @@ if __name__ == '__main__':
             N_n = n
             N_D = D
             N_d = d
-            N_N_x1 = xy1
-            N_N_x2 = xy2
+            N_xy1 = xy1
+            N_xy2 = xy2
 
     print("D,d,n={},{},{},xy1={},xy2={}, F_max={},F_var={}".format(
         N_D, N_d, N_n, N_xy1, N_xy1, N_max, N_var))
