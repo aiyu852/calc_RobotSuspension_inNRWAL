@@ -5,7 +5,7 @@ import itertools
 from functools import partial
 
 # 计算的坐标遍历细分值
-sub_num = 10
+sub_num = 2
 # 遍历的坐标空间
 Lowlim_x = -40.7
 Upplim_x = 52
@@ -167,7 +167,7 @@ if __name__ == '__main__':
     items = list(itertools.product(range(30, 55),
                                    range(3, 7), [0.3, 0.5, 0.6, 0.8, 1, 1.2]))
 
-    num_cpus = 20
+    num_cpus = 8
 
     start = time.time()
     processes = [Process(target=process, args=(items[i*len(items)//num_cpus:(i+1)*len(items)//num_cpus+1], find_values))
