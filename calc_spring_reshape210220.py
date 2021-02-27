@@ -6,7 +6,7 @@ import itertools
 from functools import partial
 
 # 计算的坐标遍历细分值
-sub_num = 3
+sub_num = 5
 # 遍历的坐标空间
 Lowlim_x = -40.7
 Upplim_x = 52
@@ -29,6 +29,12 @@ Interfere_WheelandSpring
 
 calc_counterforce
 计算地面支撑力
+
+find_spring
+根据传入弹簧参数调用calc_counterforce
+
+process
+定义了单进程的循环计算过程
 '''
 
 
@@ -98,7 +104,7 @@ def find_spring(k, xy0, xy1, xy2, L0_spring):
 def process(items, find_values):
     find_F_N = []
     find_F_N_max = 0
-    find_F_N_var = 0
+    find_F_N_min = 0
     find_n = 0
     find_D = 0
     find_d = 0
@@ -135,10 +141,10 @@ def process(items, find_values):
                                 continue
                             if np.max(F_N) > 15:
                                 continue
-                            if (np.max(F_N) > find_F_N_max and find_F_N_max < 12) or (np.var(F_N) < find_F_N_var and find_F_N_max > 12):
+                            if (np.max(F_N) > find_F_N_max and find_F_N_max < 12) or (((np.max(F_N)-np.min(F_N))/np.max(F_N) < (find_F_N_max-find_F_N_min)/find_F_N_max) and np.max(F_N) > 12):
                                 find_F_N = F_N
                                 find_F_N_max = np.max(F_N)
-                                find_F_N_var = np.var(F_N)
+                                find_F_N_min = np.min(F_N)
                                 find_n = item[0]
                                 find_D = item[1]
                                 find_d = item[2]
@@ -148,7 +154,7 @@ def process(items, find_values):
                         break
             except:
                 break
-    f = [find_F_N, find_F_N_max, find_F_N_var,
+    f = [find_F_N, find_F_N_max, find_F_N_min,
          find_n, find_D, find_d, find_xy1, find_xy2]
     find_values.append(f)
 
@@ -157,13 +163,6 @@ if __name__ == '__main__':
     # 最终数值
 
     find_values = Manager().list()
-    # find_F_N_max = 0
-    # find_F_N_var = 0
-    # find_n = 0
-    # find_D = 0
-    # find_d = 0
-    # find_xy1 = (0, 0)
-    # find_xy2 = (0, 0)
 
     items = list(itertools.product(range(30, 55),
                                    range(3, 7), [0.3, 0.5, 0.6, 0.8, 1, 1.2]))
@@ -183,23 +182,23 @@ if __name__ == '__main__':
     print(end-start)
     N = []
     N_max = 0
-    N_var = 0
+    N_min = 0
     N_n = 0
     N_D = 0
     N_d = 0
     N_xy1 = 0
     N_xy2 = 0
-    for F_N, F_N_max, F_N_var, n, D, d, xy1, xy2 in find_values:
-        if (F_N_max > N_max and N_max < 12) or (F_N_max < N_var and N_max > 12):
+    for F_N, F_N_max, F_N_min, n, D, d, xy1, xy2 in find_values:
+        if (F_N_max > N_max and N_max < 12) or ((F_N_max-F_N_min)/F_N_max < (N_max-N_min)/N_max and F_N_max > 12):
             N = F_N
             N_max = F_N_max
-            N_var = F_N_var
+            N_min = F_N_min
             N_n = n
             N_D = D
             N_d = d
             N_xy1 = xy1
             N_xy2 = xy2
 
-    print("D,d,n={},{},{},xy1={},xy2={}, F_max={},F_var={}".format(
-        N_D, N_d, N_n, N_xy1, N_xy1, N_max, N_var))
+    print("D,d,n={},{},{},xy1={},xy2={}, F_max={},对地压力损失率={}".format(
+        N_D, N_d, N_n, N_xy1, N_xy1, N_max, (N_max-N_min)/N_max))
     print(N)
