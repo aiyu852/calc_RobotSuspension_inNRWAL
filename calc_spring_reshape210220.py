@@ -6,7 +6,7 @@ import itertools
 from functools import partial
 
 # 计算的坐标遍历细分值
-sub_num = 1
+sub_num = 5
 # 遍历的坐标空间
 Lowlim_x = -40.7
 Upplim_x = 52
@@ -67,6 +67,9 @@ def calc_counterforce(xy0, k, r, H, alpha, L0_spring):
         L_spring_now = np.sqrt(r**2+H**2-2*r*H*np.cos(alpha_now))
         # 判断弹簧是否失去弹力
         if L_spring_now < L0_spring:
+            return None
+        # 判断弹簧拉伸的长度是否过长
+        if (L_spring_now-L0_spring)/L0_spring > 1:
             return None
         else:
             # 计算弹簧力F_spring，弹簧力臂arm_F_spring,判断弹簧力是否单调
@@ -141,7 +144,7 @@ def process(items, find_values):
                                 continue
                             if np.max(F_N) > 15:
                                 continue
-                            if (((np.max(F_N)-np.min(F_N))/np.max(F_N) < (find_F_N_max-find_F_N_min)/find_F_N_max) and np.max(F_N) > 12 and np.max(F_N) < 12.5):
+                            if (((np.max(F_N)-np.min(F_N))/np.max(F_N) < (find_F_N_max-find_F_N_min)/find_F_N_max) and np.max(F_N) > 11 and np.max(F_N) < 12.5):
                                 find_F_N = F_N
                                 find_F_N_max = np.max(F_N)
                                 find_F_N_min = np.min(F_N)
@@ -191,7 +194,7 @@ if __name__ == '__main__':
     N_xy1 = (0, 0)
     N_xy2 = (0, 0)
     for F_N, F_N_max, F_N_min, n, D, d, xy1, xy2 in find_values:
-        if ((F_N_max-F_N_min)/F_N_max < (N_max-N_min)/N_max and F_N_max > 10 and F_N_max < 12.5):
+        if ((F_N_max-F_N_min)/F_N_max < (N_max-N_min)/N_max):
             N = F_N
             N_max = F_N_max
             N_min = F_N_min
