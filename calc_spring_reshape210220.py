@@ -6,7 +6,7 @@ import itertools
 from functools import partial
 
 # 计算的坐标遍历细分值
-sub_num = 5
+sub_num = 1
 # 遍历的坐标空间
 Lowlim_x = -40.7
 Upplim_x = 52
@@ -103,7 +103,7 @@ def find_spring(k, xy0, xy1, xy2, L0_spring):
 
 def process(items, find_values):
     find_F_N = []
-    find_F_N_max = 0
+    find_F_N_max = 1
     find_F_N_min = 0
     find_n = 0
     find_D = 0
@@ -166,6 +166,8 @@ if __name__ == '__main__':
 
     items = list(itertools.product(range(30, 55),
                                    range(3, 7), [0.3, 0.5, 0.6, 0.8, 1, 1.2]))
+    # items = list(itertools.product(range(47, 48),
+    #                                range(4, 5), [0.6]))
 
     num_cpus = multiprocessing.cpu_count()
     print(num_cpus)
@@ -181,13 +183,13 @@ if __name__ == '__main__':
 
     print(end-start)
     N = []
-    N_max = 0
+    N_max = 1
     N_min = 0
     N_n = 0
     N_D = 0
     N_d = 0
-    N_xy1 = 0
-    N_xy2 = 0
+    N_xy1 = (0, 0)
+    N_xy2 = (0, 0)
     for F_N, F_N_max, F_N_min, n, D, d, xy1, xy2 in find_values:
         if ((F_N_max-F_N_min)/F_N_max < (N_max-N_min)/N_max and F_N_max > 10 and F_N_max < 12.5):
             N = F_N
@@ -200,5 +202,5 @@ if __name__ == '__main__':
             N_xy2 = xy2
 
     print("D,d,n={},{},{},xy1={},xy2={}, F_max={},对地压力损失率={}".format(
-        N_D, N_d, N_n, N_xy1, N_xy1, N_max, (N_max-N_min)/N_max))
+        N_D, N_d, N_n, N_xy1, N_xy2, N_max, (N_max-N_min)/N_max))
     print(N)
