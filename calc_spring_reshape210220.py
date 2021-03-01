@@ -6,7 +6,7 @@ import itertools
 from functools import partial
 
 # 计算的坐标遍历细分值
-sub_num = 5
+sub_num = 2
 # 遍历的坐标空间
 Lowlim_x = -40.7
 Upplim_x = 52
@@ -96,9 +96,13 @@ def find_spring(k, xy0, xy1, xy2, L0_spring):
     # 弹簧太短就提前跳出
     if L_spring < L0_spring:
         return None, 'The spring is too short'
+    if Interfere_WheelandSpring(xy1, xy2, L_spring):
+        return None, 'The Wheel and spring is interfered!'
     # 计算弹簧固定点与转轴的间距H和弹簧铰接点与转轴的间距r和H与r的夹角alpha
     r = np.sqrt((xy0[0]-xy2[0])**2+(xy0[1]-xy2[1])**2)
     H = np.sqrt((xy0[0]-xy1[0])**2+(xy0[1]-xy1[1])**2)
+    if r > H:
+        return None, 'The spring is opposite direction'
     alpha = np.arccos((r**2+H**2-L_spring**2)/(2*r*H))
     # 计算变化的地面反力
     return calc_counterforce(xy0, k, r, H, alpha, L0_spring)
@@ -144,7 +148,7 @@ def process(items, find_values):
                                 continue
                             if np.max(F_N) > 15:
                                 continue
-                            if (((np.max(F_N)-np.min(F_N))/np.max(F_N) < (find_F_N_max-find_F_N_min)/find_F_N_max) and np.max(F_N) > 11 and np.max(F_N) < 12.5):
+                            if (((np.max(F_N)-np.min(F_N))/np.max(F_N) < (find_F_N_max-find_F_N_min)/find_F_N_max) and np.max(F_N) > 9 and np.max(F_N) < 11):
                                 find_F_N = F_N
                                 find_F_N_max = np.max(F_N)
                                 find_F_N_min = np.min(F_N)
